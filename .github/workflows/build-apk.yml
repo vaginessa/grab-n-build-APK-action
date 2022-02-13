@@ -68,7 +68,7 @@ jobs:
         run: |
           cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
           chmod +x gradlew
-          ./gradlew ${{ github.event.inputs.module }}:assembleRelease
+          ./gradlew ${{ github.event.inputs.module }}:assembleDebug
           
       - name: build & sign
         if: ${{ github.event.inputs.sign == 'true' }}
