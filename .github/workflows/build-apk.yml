@@ -21,7 +21,7 @@ on:
       sign:
         type: boolean
         description: 'sign apk'
-        default: 'true'
+        default: 'false'
 
 jobs:
   main:
