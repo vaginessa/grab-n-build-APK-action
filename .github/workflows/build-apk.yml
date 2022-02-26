@@ -77,6 +77,17 @@ jobs:
           chmod +x gradlew
           ./gradlew ${{ github.event.inputs.module }}:assembleRelease -Pandroid.injected.signing.store.file='${{ github.workspace }}/grab-keystore.jks' -Pandroid.injected.signing.store.password='grab-pwd' -Pandroid.injected.signing.key.alias='sign' -Pandroid.injected.signing.key.password='grab-pwd'
           
+      - name: flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '2.5.3'
+        if: ${{ github.event.inputs.localproperties != 'flutter' }}
+        run: |
+          cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
+          flutter pub get
+          flutter test
+          flutter build apk
+
       - name: upload release
         uses: actions/upload-artifact@v2
         if: ${{ github.event.inputs.sign == 'true' }}
