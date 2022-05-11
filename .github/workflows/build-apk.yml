@@ -62,7 +62,25 @@ jobs:
           distribution: "zulu"
           java-version: 11
           cache: "gradle"
-          
+      
+      - name: Install Qt
+      uses: jurplel/install-qt-action@v2
+      with:
+        version: '5.15.2'
+        host: 'linux'
+        target: 'android'
+        arch: ' android_armv7'
+        dir: '${{ github.workspace }}/example/'
+        install-deps: 'true'
+        modules: 'qtcharts qtwebengine'
+        cached: 'false'
+        setup-python: 'true'
+        tools: 'tools_ifw tools_qtcreator,qt.tools.qtcreator'
+        set-env: 'false'
+        tools-only: 'false'
+        aqtversion: '==2.0.0'
+        py7zrversion: '==0.16.1'
+    
       - name: build
         if: ${{ github.event.inputs.sign == 'false' }}
         run: |
