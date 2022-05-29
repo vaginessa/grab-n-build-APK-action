@@ -68,7 +68,6 @@ jobs:
           cache: "gradle"
 
       - name: flutter-project
-        uses: actions/checkout@v2
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '2.x'
