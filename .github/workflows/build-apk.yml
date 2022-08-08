@@ -6,6 +6,9 @@ on:
       repo-url:
         description: 'git clone url'
         required: true
+      repo-branch:
+        description: 'branch to build'
+        required: true
       repo-commit:
         description: 'commit'
       repo-dir:
@@ -35,7 +38,13 @@ jobs:
           git clone ${{ github.event.inputs.repo-url }}
           echo "projectName=$(basename -s .git ${{ github.event.inputs.repo-url }})" >> $GITHUB_ENV
           echo "dirName=$(echo ${{ github.event.inputs.repo-dir }} | sed -r 's/[/]+/ - /g')" >> $GITHUB_ENV
-        
+      
+  - name: select branch
+        if: ${{ github.event.inputs.repo-commit != '' }}
+        run: |
+          cd ${{ env.projectName }}
+          git checkout ${{ github.event.inputs.repo-branch }}
+
       - name: select commit
         if: ${{ github.event.inputs.repo-commit != '' }}
         run: |
