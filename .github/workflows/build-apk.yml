@@ -18,10 +18,10 @@ on:
         description: 'google-services.json (content)'
       localproperties:
         description: 'local.properties (content)'
-      sign:
-        type: boolean
-        description: 'sign apk'
-        default: 'false'
+      flavor:
+        description: "build.gradle task name: assemble[Flavor]Debug"
+        required: false
+        default: "assembleDebug"
 
 jobs:
   main:
@@ -64,30 +64,13 @@ jobs:
           cache: "gradle"
           
       - name: build
-        if: ${{ github.event.inputs.sign == 'false' }}
         run: |
           cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
           chmod +x gradlew
-          ./gradlew ${{ github.event.inputs.module }}:assembleDebug
-          
-      - name: build & sign
-        if: ${{ github.event.inputs.sign == 'true' }}
-        run: |
-          cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
-          chmod +x gradlew
-          ./gradlew ${{ github.event.inputs.module }}:assembleRelease -Pandroid.injected.signing.store.file='${{ github.workspace }}/grab-keystore.jks' -Pandroid.injected.signing.store.password='grab-pwd' -Pandroid.injected.signing.key.alias='sign' -Pandroid.injected.signing.key.password='grab-pwd'
+          ./gradlew ${{ github.event.inputs.taskName }} --stacktrace
 
-      - name: upload release
-        uses: actions/upload-artifact@v2
-        if: ${{ github.event.inputs.sign == 'true' }}
+      - name: upload
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
-          path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/release/*.apk 
-          
-      - name: upload debug
-        uses: actions/upload-artifact@v2
-        if: ${{ github.event.inputs.sign == 'false' }}
-        with:
-          name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
-          path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/debug/*.apk 
-              
+          path: ./**/*.apk
+          name: debug
