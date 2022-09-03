@@ -64,7 +64,8 @@ jobs:
           cache: "gradle"
           
       - name: build
-        cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
+        run: |
+          cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
           chmod +x gradlew
           ./gradlew ${{ github.event.inputs.module }}:assembleRelease
 
