@@ -18,10 +18,7 @@ on:
         description: 'google-services.json (content)'
       localproperties:
         description: 'local.properties (content)'
-      flavor:
-        description: "build.gradle task name: assemble[Flavor]Debug"
-        required: false
-        default: "assembleDebug"
+      
 
 jobs:
   main:
