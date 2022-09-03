@@ -66,11 +66,15 @@ jobs:
       - name: build
         run: |
           cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
-          chmod +x gradlew
-          ./gradlew ${{ github.event.inputs.taskName }} --stacktrace
+          chmod +x gradlew assembleDebug
 
       - name: upload
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
           path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/debug/*.apk 
+
+
+
+
+
