@@ -70,9 +70,8 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
-          path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/debug/*.apk 
-
-
+          path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/release/*.apk 
+          
 
 
 
