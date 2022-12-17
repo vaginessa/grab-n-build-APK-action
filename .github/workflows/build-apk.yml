@@ -17,7 +17,7 @@ on:
       artifact-path:
         description: What to release
         required: false
-        default: 'app/build/outputs/apk/dev/debug/app-dev-universal-debug.apk'
+        default: './**/*.apk'
       artifact-name:
         description: What to call that artifact
         required: false
