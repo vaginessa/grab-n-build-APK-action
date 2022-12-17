@@ -1,77 +1,83 @@
-name: build apk
+name: build-apk
 
 on:
+  # Manual triggers
   workflow_dispatch:
     inputs:
-      repo-url:
-        description: 'git clone url'
+      release-tag:
+        description: What to call this build
         required: true
-      repo-commit:
-        description: 'commit'
-      repo-dir:
-        description: 'dir ("/..")'
-      module:
-        description: 'module'
+      setup-command:
+        description: What to do before building
+        required: false
+      gradle-command:
+        description: What to do
+        required: false
+        default: 'assembleDevDebug'
+      artifact-path:
+        description: What to release
+        required: false
+        default: 'app/build/outputs/apk/dev/debug/app-dev-universal-debug.apk'
+      artifact-name:
+        description: What to call that artifact
+        required: false
+        default: 'app.apk'
+      git-repo:
+        description: Get Repo
         required: true
-        default: 'app'
-      googleservices:
-        description: 'google-services.json (content)'
-      localproperties:
-        description: 'local.properties (content)'
-      
+      git-ref:
+        description: Git Ref (Optional)
+        required: false
+        default: 'master'
+      dry-run:
+        description: Creates a draft release
+        required: false
 
 jobs:
-  main:
+  build-app:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout
+      - name: Clone Repository
         uses: actions/checkout@v2
-        
-      - name: clone
-        run: |
-          git clone ${{ github.event.inputs.repo-url }}
-          echo "projectName=$(basename -s .git ${{ github.event.inputs.repo-url }})" >> $GITHUB_ENV
-          echo "dirName=$(echo ${{ github.event.inputs.repo-dir }} | sed -r 's/[/]+/ - /g')" >> $GITHUB_ENV
-        
-      - name: select commit
-        if: ${{ github.event.inputs.repo-commit != '' }}
-        run: |
-          cd ${{ env.projectName }}
-          git checkout ${{ github.event.inputs.repo-commit }}
-          
-      - name: add google-services.json
-        if: ${{ github.event.inputs.googleservices != '' }}
-        run: |
-          content=$(jq -r '.inputs.googleservices' $GITHUB_EVENT_PATH)
-          echo "::add-mask::$content"
-          echo "$content" > ${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/google-services.json
-        
-      - name: add local.properties
-        if: ${{ github.event.inputs.localproperties != '' }}
-        run: |
-          content=$(jq -r '.inputs.localproperties' $GITHUB_EVENT_PATH)
-          echo "::add-mask::$content"
-          echo "$content" > ${{ env.projectName }}${{ github.event.inputs.repo-dir }}/local.properties
-        
-      - name: setup
-        uses: actions/setup-java@v2
         with:
-          distribution: "zulu"
+          repository: ${{ github.event.inputs.git-repo }}
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.git-ref }}
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
           java-version: 11
-          cache: "gradle"
           
-      - name: build
+      - name: Set up
+        if: github.event.inputs.git-ref != ''
         run: |
-          cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
-          chmod +x gradlew
-          ./gradlew ${{ github.event.inputs.module }}:assembleRelease
+          set -e
+          ${{ github.event.inputs.setup-command }}
 
-      - name: upload
-        uses: actions/upload-artifact@v2
+      - name: Build APK
+        uses: gradle/gradle-command-action@v1
         with:
-          name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
-          path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/release/*.apk 
-          
+          arguments: ${{ github.event.inputs.gradle-command }}
+          distributions-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+        if: github.event.inputs.gradle-command != 'skip'
 
-
-
+      - name: Clean up build artifacts
+        run: |
+          set -e
+          cp ${{ github.event.inputs.artifact-path }} ${{ github.event.inputs.artifact-name }}
+      - name: Create release
+        uses: softprops/action-gh-release@v0.1.14
+        with:
+          tag_name: ${{ github.event.inputs.release-tag }}
+          name: ${{ github.event.inputs.release-tag }}
+          body: |
+            awesome release
+          files: |
+            ${{ github.event.inputs.artifact-name }}
+          draft: ${{ github.event.inputs.dry-run != '' }}
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
