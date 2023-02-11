@@ -13,11 +13,11 @@ on:
       gradle-command:
         description: What to do
         required: false
-        default: 'assembleDevDebug'
+        default: 'assembleDebug'
       artifact-path:
         description: What to release
         required: false
-        default: 'app/build/outputs/apk/dev/debug/app-dev-debug.apk'
+        default: 'app/build/outputs/apk/debug/app-debug.apk'
       artifact-name:
         description: What to call that artifact
         required: false
