@@ -20,3 +20,84 @@ Build and sign the apk(s) for any android project on Github.
 ## Notes
 - If the run fails in ```build``` or ```build & sign``` there is a problem with the project and there's nothing I can do, otherwise kindly report the problem. Also check if you selected the right ```module``` and filled in the additional files if needed.
 - For your own app's security, do not sign it with this key for publishing, as the password is publicly available.
+
+
+```
+name: build apk
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo-url:
+        description: 'git clone url'
+        required: true
+      repo-commit:
+        description: 'commit'
+      repo-dir:
+        description: 'dir ("/..")'
+      module:
+        description: 'module'
+        required: true
+        default: 'app'
+      googleservices:
+        description: 'google-services.json (content)'
+      localproperties:
+        description: 'local.properties (content)'
+      
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        
+      - name: clone
+        run: |
+          git clone ${{ github.event.inputs.repo-url }}
+          echo "projectName=$(basename -s .git ${{ github.event.inputs.repo-url }})" >> $GITHUB_ENV
+          echo "dirName=$(echo ${{ github.event.inputs.repo-dir }} | sed -r 's/[/]+/ - /g')" >> $GITHUB_ENV
+        
+      - name: select commit
+        if: ${{ github.event.inputs.repo-commit != '' }}
+        run: |
+          cd ${{ env.projectName }}
+          git checkout ${{ github.event.inputs.repo-commit }}
+          
+      - name: add google-services.json
+        if: ${{ github.event.inputs.googleservices != '' }}
+        run: |
+          content=$(jq -r '.inputs.googleservices' $GITHUB_EVENT_PATH)
+          echo "::add-mask::$content"
+          echo "$content" > ${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/google-services.json
+        
+      - name: add local.properties
+        if: ${{ github.event.inputs.localproperties != '' }}
+        run: |
+          content=$(jq -r '.inputs.localproperties' $GITHUB_EVENT_PATH)
+          echo "::add-mask::$content"
+          echo "$content" > ${{ env.projectName }}${{ github.event.inputs.repo-dir }}/local.properties
+        
+      - name: setup
+        uses: actions/setup-java@v2
+        with:
+          distribution: "zulu"
+          java-version: 11
+          cache: "gradle"
+          
+      - name: build
+        run: |
+          cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
+          chmod +x gradlew
+          ./gradlew ${{ github.event.inputs.module }}:assembleRelease
+
+      - name: upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
+          path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/release/*.apk 
+          
+
+
+
+```
