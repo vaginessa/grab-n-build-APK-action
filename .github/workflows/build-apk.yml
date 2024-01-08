@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         
       - name: clone
         run: |
@@ -54,7 +54,7 @@ jobs:
           echo "$content" > ${{ env.projectName }}${{ github.event.inputs.repo-dir }}/local.properties
         
       - name: setup
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           distribution: "zulu"
           java-version: 11
@@ -67,7 +67,7 @@ jobs:
           ./gradlew ${{ github.event.inputs.module }}:assembleRelease
 
       - name: upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
           path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/release/*.apk 
