@@ -1,0 +1,85 @@
+name: build-apk-2
+
+on:
+  # Manual triggers
+  workflow_dispatch:
+    inputs:
+      release-tag:
+        description: What to call this build
+        required: true
+      setup-command:
+        description: What to do before building
+        required: false
+      gradle-command:
+        description: What to do
+        required: false
+        default: 'assembleDevDebug'
+      artifact-path:
+        description: What to release
+        required: false
+        default: 'app/build/outputs/apk/dev/debug/app-dev-debug.apk'
+      artifact-name:
+        description: What to call that artifact
+        required: false
+        default: 'app.apk'
+      git-repo:
+        description: Get Repo
+        required: true
+      git-ref:
+        description: Git Ref (Optional)
+        required: false
+        default: 'master'
+      dry-run:
+        description: Creates a draft release
+        required: false
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ github.event.inputs.git-repo }}
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.git-ref }}
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          distribution: "zulu"
+          java-version: 11
+          cache: "gradle"
+          
+      - name: Set up
+        if: github.event.inputs.git-ref != ''
+        run: |
+          set -e
+          ${{ github.event.inputs.setup-command }}
+
+      - name: Build APK
+        uses: gradle/gradle-command-action@v1
+        with:
+          arguments: ${{ github.event.inputs.gradle-command }}
+          distributions-cache-enabled: true
+          dependencies-cache-enabled: true
+          configuration-cache-enabled: true
+        if: github.event.inputs.gradle-command != 'skip'
+
+      - name: Clean up build artifacts
+        run: |
+          set -e
+          cp ${{ github.event.inputs.artifact-path }} ${{ github.event.inputs.artifact-name }}
+      - name: Create release
+        uses: softprops/action-gh-release@v0.1.14
+        with:
+          tag_name: ${{ github.event.inputs.release-tag }}
+          name: ${{ github.event.inputs.release-tag }}
+          body: |
+            awesome release
+          files: |
+            ${{ github.event.inputs.artifact-name }}
+          draft: ${{ github.event.inputs.dry-run != '' }}
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
