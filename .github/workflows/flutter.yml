@@ -1,0 +1,56 @@
+name: build flutter apk
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo-url:
+        description: 'git clone url'
+        required: true
+      repo-commit:
+        description: 'commit'
+      repo-dir:
+        description: 'dir ("/..")'
+      module:
+        description: 'module'
+        required: true
+        default: 'android'
+      sign:
+        type: boolean
+        description: 'sign apk'
+        default: 'false'
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '2.10.4'
+        
+      - name: clone
+        run: |
+          git clone ${{ github.event.inputs.repo-url }}
+          echo "projectName=$(basename -s .git ${{ github.event.inputs.repo-url }})" >> $GITHUB_ENV
+      - name: select commit
+        if: ${{ github.event.inputs.repo-commit != '' }}
+        run: |
+          cd ${{ env.projectName }}
+          git checkout ${{ github.event.inputs.repo-commit }}
+          
+      - name: build
+        run: |
+          cd ${{ env.projectName }}
+          flutter pub get
+          flutter build apk
+
+      - name: upload debug
+        uses: actions/upload-artifact@v2
+        with:
+          name: Upload Debug
+          path: ${{ steps.android-build.outputs.apk-path }}
+      
