@@ -1,0 +1,103 @@
+name: build APK Branches
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo-url:
+        description: 'git clone url'
+        required: true
+      repo-branch:
+        description: 'branch to build'
+        required: true
+        default: 'master'
+      repo-commit:
+        description: 'commit'
+      repo-dir:
+        description: 'dir ("/..")'
+      module:
+        description: 'module'
+        required: true
+        default: 'app'
+      googleservices:
+        description: 'google-services.json (content)'
+      localproperties:
+        description: 'local.properties (content)'
+      sign:
+        type: boolean
+        description: 'sign apk'
+        default: 'false'
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        
+      - name: clone
+        run: |
+          git clone ${{ github.event.inputs.repo-url }}
+          echo "projectName=$(basename -s .git ${{ github.event.inputs.repo-url }})" >> $GITHUB_ENV
+          echo "dirName=$(echo ${{ github.event.inputs.repo-dir }} | sed -r 's/[/]+/ - /g')" >> $GITHUB_ENV
+      
+  - name: select branch
+        if: ${{ github.event.inputs.repo-commit != '' }}
+        run: |
+          cd ${{ env.projectName }}
+          git checkout ${{ github.event.inputs.repo-branch }}
+
+      - name: select commit
+        if: ${{ github.event.inputs.repo-commit != '' }}
+        run: |
+          cd ${{ env.projectName }}
+          git checkout ${{ github.event.inputs.repo-commit }}
+          
+      - name: add google-services.json
+        if: ${{ github.event.inputs.googleservices != '' }}
+        run: |
+          content=$(jq -r '.inputs.googleservices' $GITHUB_EVENT_PATH)
+          echo "::add-mask::$content"
+          echo "$content" > ${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/google-services.json
+        
+      - name: add local.properties
+        if: ${{ github.event.inputs.localproperties != '' }}
+        run: |
+          content=$(jq -r '.inputs.localproperties' $GITHUB_EVENT_PATH)
+          echo "::add-mask::$content"
+          echo "$content" > ${{ env.projectName }}${{ github.event.inputs.repo-dir }}/local.properties
+        
+      - name: setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: 17
+          cache: "gradle"
+          
+      - name: build
+        if: ${{ github.event.inputs.sign == 'false' }}
+        run: |
+          cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
+          chmod +x gradlew
+          ./gradlew ${{ github.event.inputs.module }}:assembleDebug
+          
+      - name: build & sign
+        if: ${{ github.event.inputs.sign == 'true' }}
+        run: |
+          cd ${{ env.projectName }}${{ github.event.inputs.repo-dir }}
+          chmod +x gradlew
+          ./gradlew ${{ github.event.inputs.module }}:assembleRelease -Pandroid.injected.signing.store.file='${{ github.workspace }}/grab-keystore.jks' -Pandroid.injected.signing.store.password='grab-pwd' -Pandroid.injected.signing.key.alias='sign' -Pandroid.injected.signing.key.password='grab-pwd'
+
+      - name: upload release
+        uses: actions/upload-artifact@v4
+        if: ${{ github.event.inputs.sign == 'true' }}
+        with:
+          name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
+          path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/release/*.apk 
+          
+      - name: upload debug
+        uses: actions/upload-artifact@v4
+        if: ${{ github.event.inputs.sign == 'false' }}
+        with:
+          name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
+          path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/debug/*.apk 
+              
