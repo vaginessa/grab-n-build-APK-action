@@ -9,7 +9,6 @@ on:
       repo-branch:
         description: 'branch to build'
         required: true
-        default: 'master'
       repo-commit:
         description: 'commit'
       repo-dir:
