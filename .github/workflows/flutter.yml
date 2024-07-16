@@ -30,7 +30,7 @@ jobs:
           java-version: '11'
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '2.10.4'
+          flutter-version: '3.22.3'
         
       - name: clone
         run: |
@@ -49,7 +49,7 @@ jobs:
           flutter build apk
 
       - name: upload debug
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Upload Debug
           path: ${{ steps.android-build.outputs.apk-path }}
