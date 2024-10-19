@@ -1,5 +1,7 @@
-# Git Repo Apk Builder
-Build and sign the apk(s) for any android project on Github.
+# Git Repo Apk Builder. 
+
+### Build and sign the apk(s) for any android project on Github.
+
 [Workflow](https://github.com/Yanndroid/grab/actions/workflows/build-apk.yml)
 
 ## Usage
@@ -19,7 +21,7 @@ Build and sign the apk(s) for any android project on Github.
 
 ## Notes
 - If the run fails in ```build``` or ```build & sign``` there is a problem with the project and there's nothing I can do, otherwise kindly report the problem. Also check if you selected the right ```module``` and filled in the additional files if needed.
-- For your own app's security, do not sign it with this key for publishing, as the password is publicly available.
+- **For your own app's security, do not sign it with this key for publishing, as the password is publicly available.**
 
 
 ```
@@ -97,7 +99,9 @@ jobs:
           name: ${{ env.projectName }}${{ env.dirName }} - ${{ github.event.inputs.module }}
           path: ${{ github.workspace }}/${{ env.projectName }}${{ github.event.inputs.repo-dir }}/${{ github.event.inputs.module }}/build/outputs/apk/release/*.apk 
           
-
-
-
 ```
+
+------  
+[![APK Build Action (new)](https://github.com/vaginessa/grab-n-build-APK-action/actions/workflows/build-apk.yml/badge.svg?branch=master)](https://github.com/vaginessa/grab-n-build-APK-action/actions/workflows/build-apk.yml)
+
+
