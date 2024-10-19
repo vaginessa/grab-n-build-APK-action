@@ -1,6 +1,6 @@
 ![Alt-Text](https://github.com/vaginessa/grab-n-build-APK-action/blob/master/grab-n-build-APK-action(3).png?raw=true) 
 
-**Build, sign and release APKs with Github Actions for any android project without forking source repos **
+**Build, sign and release APKs with Github Actions for any android project without forking source repos..**
 
 [Workflow](https://github.com/Yanndroid/grab/actions/workflows/build-apk.yml)
 
