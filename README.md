@@ -2,7 +2,7 @@
 
 **Build, sign and release APKs with Github Actions for any android project without forking source repos..**
 
-[Workflow](https://github.com/Yanndroid/grab/actions/workflows/build-apk.yml)
+## **pull request are alwaays welcome!!**
 
 ## Usage
 1. fork this repo
