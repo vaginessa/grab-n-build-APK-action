@@ -1,12 +1,12 @@
-# Git Repo Apk Builder. 
+![Alt-Text](https://github.com/vaginessa/grab-n-build-APK-action/blob/master/grab-n-build-APK-action(3).png?raw=true) 
 
-### Build and sign the apk(s) for any android project on Github.
+**Build and sign the apk(s) for any android project on Github.**
 
 [Workflow](https://github.com/Yanndroid/grab/actions/workflows/build-apk.yml)
 
 ## Usage
 1. fork this repo
-2. open the ```actions``` tab and select ```build apk``` in the left pane
+2. open the ```actions``` tab and select workflow ```build apk``` or other in the left pane
 3. click ```Run workflow``` and fill in what you need:
     - ```git clone url```: the git url of the repo you want to build the apk from. ex: ```https://github.com/Yanndroid/OneUI-Design-Library.git```
     - ```commit```: optional, if you want the apk of a particular commit (also from a different branch). ex: ```cf3fef4``` or ```cf3fef46ad0db897a270ac4a25ce6b4372f2655f```
