@@ -1,0 +1,76 @@
+name: Build Android APK
+run-name: ${{ github.event.inputs.repository }}:Debug
+ 
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: "The Git repository URL of the Android project."
+        required: true
+        default: "https://github.com/android/sunflower"
+      jdkVersion:
+        description: "The version of OpenJDK to use (e.g., 8, 11, 17, 21, etc.). This should match the version required by your project."
+        required: false
+        default: "17"
+      retentionDays:
+        description: "The number of days to retain the uploaded APK artifact on GitHub."
+        required: true
+        default: "1"
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: ${{ github.event.inputs.jdkVersion }}
+ 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+ 
+      - name: Clone project
+        run: git clone --depth=1 ${{ github.event.inputs.repository }} workspace
+ 
+      - name: Check and Adjust Detekt Configuration
+        id: detekt_adjust
+        working-directory: ./workspace
+        run: |
+          if [ -f "config/detekt/detekt.yml" ]; then
+            echo "Detekt configuration file exists. Adjusting thresholds..."
+            echo "complexity:" >> config/detekt/detekt.yml
+            echo "  TooManyFunctions:" >> config/detekt/detekt.yml
+            echo "    thresholdInClasses: 30" >> config/detekt/detekt.yml
+            echo "    thresholdInObjects: 30" >> config/detekt/detekt.yml
+            echo "    thresholdInEnums: 30" >> config/detekt/detekt.yml
+            echo "  LongMethod:" >> config/detekt/detekt.yml
+            echo "    threshold: 100" >> config/detekt/detekt.yml
+            echo "  CyclomaticComplexity:" >> config/detekt/detekt.yml
+            echo "    threshold: 20" >> config/detekt/detekt.yml
+            echo "::set-output name=detekt_adjusted::true"
+          else
+            echo "Detekt configuration file does not exist. Skipping adjustments."
+            echo "::set-output name=detekt_adjusted::false"
+          fi
+ 
+      - name: Build APK
+        working-directory: ./workspace
+        run: |
+          if [ ! -f "gradlew" ]; then gradle wrapper; fi
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+ 
+      - name: Upload the APK artifact with user-specified retention
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-archive
+          path: ./**/*.apk
+          retention-days: ${{ github.event.inputs.retentionDays }}
