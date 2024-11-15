@@ -1,4 +1,4 @@
-name: APK Build Action (new)
+name: Build REKLEASE APK Action (new)
 
 on:
   workflow_dispatch:
